@@ -20,6 +20,7 @@ fn move_one_test() {
             From: 2, // segunda columna
             To: 1,   // hacia la primera columna
         },
+        false,
     );
 
     assert_eq!(result, init);
@@ -37,12 +38,36 @@ fn move_two_test() {
             From: 2, // segunda columna
             To: 1,   // hacia la primera columna
         },
+        false,
     );
 
     assert_eq!(result, init);
 }
 
-fn apply_action_to_array(arr: &mut Vec<Vec<char>>, action: DataAction) {
+#[test]
+fn move_three_in_the_same_order_test() {
+    let mut init: Vec<Vec<char>> = vec![vec!['A'], vec!['X', 'Y', 'Z']];
+    let result: Vec<Vec<char>> = vec![vec!['A', 'X', 'Y', 'Z'], vec![]];
+
+    apply_action_to_array(
+        &mut init,
+        DataAction {
+            Move: 3, // 2 movimientos
+            From: 2, // segunda columna
+            To: 1,   // hacia la primera columna
+        },
+        true,
+    );
+
+    assert_eq!(result, init);
+}
+
+fn apply_action_to_array(
+    arr: &mut Vec<Vec<char>>,
+    action: DataAction,
+    is_moved_in_the_same_order: bool,
+) {
+    let last_position = arr.get(action.To - 1).unwrap().len();
     for _ in 0..action.Move {
         let origin = arr
             .get_mut(action.From - 1)
@@ -52,7 +77,14 @@ fn apply_action_to_array(arr: &mut Vec<Vec<char>>, action: DataAction) {
         let destination = arr
             .get_mut(action.To - 1)
             .expect("No se encontró {action.To}");
-        destination.push(last_value);
+
+        // ejem: si hay 3 items, estos se moveran a otra posición, pero están en el mismo orden
+        if is_moved_in_the_same_order {
+            destination.insert(last_position, last_value);
+        } else {
+            destination.push(last_value);
+        }
+        println!("{:?}", destination);
     }
 }
 
@@ -113,7 +145,15 @@ fn transform_to_dataaction(text: &str) -> DataAction {
     };
 }
 
-pub fn run() {
+pub fn exercise_1() {
+    exercise(false);
+}
+
+pub fn exercise_2() {
+    exercise(true);
+}
+
+fn exercise(is_movved_in_the_same_order: bool) {
     /* graph:
     [V]     [B]                     [C]
     [C]     [N] [G]         [W]     [P]
@@ -145,9 +185,9 @@ pub fn run() {
         }
 
         let dataaction = transform_to_dataaction(line);
-        apply_action_to_array(&mut graph, dataaction);
+        apply_action_to_array(&mut graph, dataaction, is_movved_in_the_same_order);
     }
-    
+
     let result = get_top_characters(&graph);
     println!("result: {:?}", result);
 }
